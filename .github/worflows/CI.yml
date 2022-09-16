@@ -1,0 +1,77 @@
+name: Hello World python code 
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: 
+      - main 
+  pull_request:
+    branches: 
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  #workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+  
+    # The type of runner that the job will run on
+    runs-on: [ self-hosted ]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository content
+      - uses: actions/checkout@v3
+       #check the version used 
+      - name: Install dependencies 
+        run: 
+          python3 -m pip install --upgrade pip
+          pip install flask 
+          pip -r requirements.txt
+      - name: Install virtual python environment 
+        run: 
+          python3 -m venv ./venv 
+          source .venv/bin/activate 
+          
+      - name: Execute py script 
+        run: 
+          python3 helloworld.py 
+      #- name: execute python API 
+        #un: |
+        #  python3 api.py 
+        #  exit 
+  units-tests:
+    needs: build 
+    runs-on : [ self-hosted ]
+    steps: 
+      - uses: actions/checkout@v3
+      - name: Test with pytest 
+        run:
+          pytest  #test_helloworld.py
+  bandit-check: 
+    needs: build 
+    runs-on: [ self-hosted ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test with Bandit 
+        run:
+          bandit -r helloworld.py
+  safety-check:
+    needs: build 
+    runs-on: [ self-hosted ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test with Safety for dependances 
+        run: 
+          safety check 
+  security:
+    needs: build
+    runs-on: [ self-hosted ]
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities #test snyk
+        uses: snyk/actions/python-3.8@master
+        env:
+          SNYK_TOKEN: ${{secrets.SNYK_TOKEN}}
